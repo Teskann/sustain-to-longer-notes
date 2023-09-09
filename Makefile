@@ -1,5 +1,6 @@
 clean: install
 	rm -rf build dist .eggs *.egg-info
+	echo Successfuly installed ! Try it running "sustain -h"
 
 tests: requirements
 	echo Running tests ...

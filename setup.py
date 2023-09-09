@@ -6,5 +6,5 @@ setup(
     use_scm_version=True,
     packages=find_packages(),
     include_package_data=True,
-    entry_points={'console_scripts': ['sustain=sustain_to_longer_notes.__main__']}
+    entry_points={'console_scripts': ['sustain=sustain_to_longer_notes.__main__:main']}
 )
