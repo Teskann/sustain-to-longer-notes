@@ -1,9 +1,0 @@
-0, 0, Header, 1, 2, 480
-2, 0, Start_track
-2, 10, Note_on_c, 0, 60, 127
-2, 20, Note_off_c, 0, 60, 127
-2, 65, Note_on_c, 0, 60, 127
-2, 70, Note_off_c, 0, 60, 127
-2, 81, Note_on_c, 0, 60, 127
-2, 0, End_track
-0, 0, End_of_file

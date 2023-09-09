@@ -1,4 +1,5 @@
-import mido
+import pretty_midi
+from itertools import groupby
 
 SUSTAIN_PEDAL_CONTROLLER_NUMBER: int = 64
 
@@ -24,7 +25,7 @@ class SustainRange:
         :param time: time to check
         :return: boolean
         """
-        return self.start <= time <= self.stop
+        return self.start < time <= self.stop
 
     def __str__(self):
         return f"({self.start}, {self.stop})"
@@ -33,68 +34,65 @@ class SustainRange:
         return self.start == other.start and self.stop == other.stop
 
 
-def timed(midi_track: mido.MidiTrack) -> zip:
-    """
-    Returns a zip of midi track along with the absolute time of each message
-    :param midi_track: input midi track
-    :return:
-    """
-    time = 0
-    times = [m.time for m in midi_track]
-    for i, t in enumerate(times):
-        time += t
-        times[i] = time
-    return zip(midi_track, times)
-
-
-def get_all_sustain_ranges(midi_track: mido.MidiTrack) -> list[SustainRange]:
+def get_all_sustain_ranges(midi_track: pretty_midi.Instrument) -> list[SustainRange]:
     """
     Get the sustain ranges for the given track
     :param midi_track: input midi track
     :return: list of all the sustain ranges of the track
     """
 
-    def is_sustain_pedal(m: mido.Message):
-        return m.type == "control_change" and m.control == SUSTAIN_PEDAL_CONTROLLER_NUMBER
+    def is_sustain_pedal(m: pretty_midi.ControlChange):
+        return m.number == SUSTAIN_PEDAL_CONTROLLER_NUMBER
 
-    def is_sustain_pedal_on(m: mido.Message): return is_sustain_pedal(m) and m.value >= 64
-    def is_sustain_pedal_off(m: mido.Message): return is_sustain_pedal(m) and not is_sustain_pedal_on(m)
+    def is_sustain_pedal_on(m: pretty_midi.ControlChange): return is_sustain_pedal(m) and m.value >= 64
+    def is_sustain_pedal_off(m: pretty_midi.ControlChange): return is_sustain_pedal(m) and not is_sustain_pedal_on(m)
 
     sustain_ranges = []
     start = None
     stop = None
-    for message, time in filter(lambda x: is_sustain_pedal(x[0]), timed(midi_track)):
+    for message in midi_track.control_changes:
         if is_sustain_pedal_on(message) and start is None:
-            start = time
+            start = message.time
         elif is_sustain_pedal_off(message) and start is not None:
-            stop = time
+            stop = message.time
         if start is not None and stop is not None:
             sustain_ranges.append(SustainRange(start, stop))
             start = None
             stop = None
     if start is not None:
-        sustain_ranges.append(SustainRange(start, list(timed(midi_track))[-1][1]))
+        sustain_ranges.append(SustainRange(start, max(midi_track.notes, key=lambda n: n.end).end))
     return sustain_ranges
 
 
-def extend_notes_in_range(midi_track: mido.MidiTrack, sustain_range: SustainRange):
+def extend_notes_in_range(midi_track: pretty_midi.Instrument, sustain_range: SustainRange):
     """
     Extend the length of the notes in the given midi track until the stop of the sustain range.
     :param midi_track: input midi track
     :param sustain_range:
     """
 
-    def is_in_range(m: mido.Message) -> bool: return sustain_range.contains(m.time)
-    def is_note_off(m: mido.Message) -> bool: return m.type == 'note_off' or m.type == 'note_on' and m.velocity == 0
-    def filter_func(m: mido.Message) -> bool: return is_in_range(m) and is_note_off(m)
-    for message in filter(filter_func, midi_track):
-        message.time = sustain_range.stop
+    def is_in_range(m: pretty_midi.Note) -> bool: return sustain_range.contains(m.end)
+    for note in filter(is_in_range, midi_track.notes):
+        note.end = sustain_range.stop
 
 
-def remove_overlapping_events(midi_track: mido.MidiTrack):
-    pass
+def remove_overlapping_notes(midi_track: pretty_midi.Instrument):
+    for _, notes in groupby(midi_track.notes, key=lambda n: n.pitch):
+        notes = sorted(list(notes), key=lambda x: x.start)
+        for i in range(len(notes) - 1):
+            if notes[i + 1].start < notes[i].end:
+                notes[i].end = notes[i+1].start
 
 
-def sustain(midi_file: mido.MidiFile):
-    for track in midi_file.tracks:
-        pass
+def sustain(midi_file: pretty_midi.PrettyMIDI):
+    for track in midi_file.instruments:
+        for sustain_range in get_all_sustain_ranges(track):
+            extend_notes_in_range(track, sustain_range)
+        remove_overlapping_notes(track)
+
+
+def sustain_file(input_file: str, output_file: str):
+    midi = pretty_midi.PrettyMIDI(input_file)
+    sustain(midi)
+    midi.write(output_file)
+

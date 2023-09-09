@@ -6,8 +6,8 @@ def test_SustainRange_contains():
     assert sus.SustainRange(0, 10).contains(3)
     assert sus.SustainRange(0, 10).contains(5)
 
-    # Bounds should be included
-    assert sus.SustainRange(1, 4).contains(1)
+    # Bounds
+    assert not sus.SustainRange(1, 4).contains(1)
     assert sus.SustainRange(1, 4).contains(4)
 
     # Greater
