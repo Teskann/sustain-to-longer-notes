@@ -77,7 +77,8 @@ def extend_notes_in_range(midi_track: pretty_midi.Instrument, sustain_range: Sus
 
 
 def remove_overlapping_notes(midi_track: pretty_midi.Instrument):
-    for _, notes in groupby(midi_track.notes, key=lambda n: n.pitch):
+    sorted_notes = sorted(midi_track.notes, key=lambda n: n.pitch)
+    for _, notes in groupby(sorted_notes, key=lambda n: n.pitch):
         notes = sorted(list(notes), key=lambda x: x.start)
         for i in range(len(notes) - 1):
             if notes[i + 1].start < notes[i].end:

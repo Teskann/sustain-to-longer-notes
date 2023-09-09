@@ -6,7 +6,7 @@ changed notes duration.
 ## Installation
 
 ### Prerequisites
-* 
+
 * Python 3
 * Make
 

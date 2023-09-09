@@ -17,7 +17,7 @@ def main():
     files = []
     for input_file in inputs:
         if isdir(input_file):
-            files += glob.glob(inputs + '/*.[Mm][Ii][Dd]')
+            files += glob.glob(input_file + '/*.[Mm][Ii][Dd]')
         elif isfile(input_file):
             files.append(input_file)
         else:
