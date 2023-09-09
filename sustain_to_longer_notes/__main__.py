@@ -1,4 +1,3 @@
-import os.path
 import argparse
 from os.path import isdir, isfile, splitext
 import glob
