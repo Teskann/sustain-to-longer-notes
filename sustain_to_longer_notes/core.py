@@ -1,3 +1,5 @@
+from typing import Union
+
 import pretty_midi
 from itertools import groupby
 
@@ -10,16 +12,16 @@ class SustainRange:
     time of a sustain pedal on message, and `stop` corresponds to the time of the next sustain pedal off message.
     """
 
-    def __init__(self, start: int | float, stop: int | float):
+    def __init__(self, start: Union[int, float], stop: Union[int, float]):
         """
         Create a sustain range
         :param start: time of a sustain pedal on message
         :param stop: time of the sustain pedal off message coming right after the time of `start`
         """
-        self.start: int | float = start
-        self.stop: int | float = stop
+        self.start: Union[int, float] = start
+        self.stop: Union[int, float] = stop
 
-    def contains(self, time: int | float) -> bool:
+    def contains(self, time: Union[int, float]) -> bool:
         """
         Returns True if the passed time is in the range, else returns False
         :param time: time to check
@@ -68,7 +70,8 @@ def extend_notes_in_range(midi_track: pretty_midi.Instrument, sustain_range: Sus
     """
     Extend the length of the notes in the given midi track until the stop of the sustain range.
     :param midi_track: input midi track
-    :param sustain_range:
+    :param sustain_range: Range to apply to the midi track
+    :return: None, `midi_track` is modified
     """
 
     def is_in_range(m: pretty_midi.Note) -> bool: return sustain_range.contains(m.end)
@@ -77,6 +80,11 @@ def extend_notes_in_range(midi_track: pretty_midi.Instrument, sustain_range: Sus
 
 
 def remove_overlapping_notes(midi_track: pretty_midi.Instrument):
+    """
+    Remove overlapping notes of the same pitch in the midi track.
+    :param midi_track: input midi track
+    :return: None, `midi_track` is modified
+    """
     sorted_notes = sorted(midi_track.notes, key=lambda n: n.pitch)
     for _, notes in groupby(sorted_notes, key=lambda n: n.pitch):
         notes = sorted(list(notes), key=lambda x: x.start)
@@ -86,6 +94,11 @@ def remove_overlapping_notes(midi_track: pretty_midi.Instrument):
 
 
 def sustain(midi_file: pretty_midi.PrettyMIDI):
+    """
+    Convert the sustain pedal events of the midi file to longer notes. This is applied to all tracks individually.
+    :param midi_file: input midi file
+    :return: None, `midi_file` is modified
+    """
     for track in midi_file.instruments:
         for sustain_range in get_all_sustain_ranges(track):
             extend_notes_in_range(track, sustain_range)
@@ -93,6 +106,12 @@ def sustain(midi_file: pretty_midi.PrettyMIDI):
 
 
 def sustain_file(input_file: str, output_file: str):
+    """
+    Convert the sustain pedal events of the midi file `input_file` and save the result in `output_file`
+    :param input_file: Path to the input MIDI file
+    :param output_file: Path to the output MIDI file. If the file exists, it's overwritten.
+    :return: None
+    """
     midi = pretty_midi.PrettyMIDI(input_file)
     sustain(midi)
     midi.write(output_file)
