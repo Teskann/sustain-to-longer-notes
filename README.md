@@ -1,5 +1,8 @@
 # 🎹 Sustain to Longer Notes
 
+[![Action results](https://github.com/teskann/sustain-to-longer-notes/actions/workflows/sustain_to_longer_notes.yml/badge.svg)](https://github.com/Teskann/sustain-to-longer-notes/actions/)
+ [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 Convert a MIDI file with sustain pedal events to a midi file with
 changed notes duration.
 

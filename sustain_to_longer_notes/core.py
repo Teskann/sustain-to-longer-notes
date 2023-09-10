@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 import pretty_midi
 from itertools import groupby
@@ -36,7 +36,7 @@ class SustainRange:
         return self.start == other.start and self.stop == other.stop
 
 
-def get_all_sustain_ranges(midi_track: pretty_midi.Instrument) -> list[SustainRange]:
+def get_all_sustain_ranges(midi_track: pretty_midi.Instrument) -> List[SustainRange]:
     """
     Get the sustain ranges for the given track
     :param midi_track: input midi track
